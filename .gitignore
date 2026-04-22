@@ -1,2 +1,5 @@
 *.env
 .idea/
+__pycache__/settings.cpython-312.pyc
+
+__pycache__/cf.cpython-312.pyc

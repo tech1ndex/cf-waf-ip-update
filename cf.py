@@ -11,14 +11,14 @@ class Cloudflare:
         self.zone_id = settings.zone_id
         self.ruleset = settings.ruleset
 
-    def get_cf_waf_rules(self):
+    def get_cf_waf_rules(self) -> dict:
         api_url = f"{self.cf_api_url}/zones/{self.zone_id}/rulesets/{self.ruleset}"
         request_headers={"Authorization": f"Bearer {self.token}" ,"Content-Type":"application/json"}
 
         return requests.get(api_url, headers=request_headers).json()
 
 
-    def update_ip_cf_waf_rule(self, rule_id, description, expression):
+    def update_ip_cf_waf_rule(self, rule_id, description, expression) -> dict:
         api_url = f"{self.cf_api_url}/zones/{self.zone_id}/rulesets/{self.ruleset}/rules/{rule_id}"
         request_headers={"Authorization": f"Bearer {self.token}" ,"Content-Type":"application/json"}
         data = {"action": "block", "description": f"{description}",
@@ -28,5 +28,5 @@ class Cloudflare:
 
     @staticmethod
     def get_my_ip() -> str:
-        my_ip = requests.get("http://ifconfig.me").text
+        my_ip = requests.get("https://ifconfig.me").text
         return my_ip

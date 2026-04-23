@@ -1,27 +1,34 @@
 import re
+from typing import Any
+
 from cf import Cloudflare
 from logger import logger
 
 cf = Cloudflare()
-rules = cf.get_cf_waf_rules()
-my_ip = cf.get_my_ip()
+
+def update_ip(rule: Any) -> None:
+        my_ip = cf.get_my_ip()
+        ip = re.findall( r'[0-9]+(?:\.[0-9]+){3}', rule['expression'])
+        if not ip:
+            logger.error(f"Rule does not contain IP: {rule['description']}")
+            return
+
+        new_ip = rule['expression'].replace(ip[0], my_ip)
+        print(ip)
+        print(new_ip)
+        if new_ip == my_ip:
+            logger.info(f"Rule {rule['description']} matched IP: {ip[0]}, skipping")
+
+        cf.update_ip_cf_waf_rule(
+                        rule_id=rule['id'],
+                        description=rule['description'],
+                        expression=new_ip)
+        logger.info(f"IP Address for Rule: {rule['description']} updated from {ip[0]} to {my_ip}")
 
 def main() -> None:
-    for x in rules['result']['rules']:
-        try:
-            ip = re.findall( r'[0-9]+(?:\.[0-9]+){3}', x['expression'])
-            new_ip = x['expression'].replace(ip[0], my_ip)
-
-            cf.update_ip_cf_waf_rule(
-                            rule_id=x['id'],
-                            description=x['description'],
-                            expression=new_ip)
-            logger.info(f"IP Address for Rule: {x['description']} updated from {ip[0]} to {my_ip}")
-        except IndexError as e:
-            logger.error(f"Rule does not contain IP: {x['description']}, {e}")
-            pass
-        except Exception as e:
-            logger.error(f"Error updating IP Address for Rule: {x['description']}, {e}")
+    rules = cf.get_cf_waf_rules()
+    for rule in rules['result']['rules']:
+        update_ip(rule)
 
 if __name__ == "__main__":
     main()
